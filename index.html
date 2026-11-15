@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>傅佳礼的文档库</title>
+<style>
+:root {
+  color-scheme: light;
+  font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", Inter, sans-serif;
+  color: #232b28;
+  background: #f1f3ef;
+  --forest: #244a3d;
+  --muted: #55665e;
+  --rule: #d9e0d9;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+h1, h2, h3, p { margin: 0; }
+a { color: var(--forest); }
+button, input { font: inherit; }
+:focus-visible { outline: 2px solid #42735e; outline-offset: 3px; }
+.workspace { display: grid; grid-template-columns: 274px minmax(0, 1fr); min-height: 100vh; }
+.sidebar {
+  align-self: start; position: sticky; top: 0; max-height: 100vh; overflow: auto;
+  min-height: 100vh; padding: 27px 19px; background: #e8ede6; border-right: 1px solid var(--rule);
+}
+.identity { display: flex; align-items: center; gap: 11px; margin-bottom: 31px; }
+.identity h1 { color: #203a30; font-size: 17px; letter-spacing: .035em; }
+.monogram {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 8px;
+  background: var(--forest); color: #fff; font-size: 17px; font-weight: 650; flex: none;
+}
+.finder { display: grid; gap: 8px; margin-bottom: 20px; }
+.finder label, .entries h2 { font-size: 13px; font-weight: 650; color: #4a6055; }
+.finder input {
+  width: 100%; border: 1px solid #c4d2c8; border-radius: 7px; padding: 9px 11px;
+  background: #fafffa; color: #203a30;
+}
+.finder input::placeholder { color: #687970; }
+.filters { display: grid; gap: 3px; }
+.filters button {
+  display: flex; width: 100%; gap: 12px; justify-content: space-between; align-items: center;
+  text-align: left; background: transparent; border: 0; border-radius: 7px;
+  cursor: pointer; padding: 8px 10px; color: var(--forest); font-size: 14px;
+}
+.filters button:hover { background: #e0e8dd; }
+.filters button[aria-pressed=true] { background: #d5e2d5; font-weight: 700; }
+.filters small, .entries small { font-size: 12px; color: var(--muted); }
+.entries { margin-top: 24px; border-top: 1px solid #cdd8ce; padding-top: 18px; }
+.entries ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.entries li + li { margin-top: 4px; }
+.entries a {
+  display: grid; gap: 6px; border: 1px solid transparent; border-radius: 7px;
+  padding: 10px; color: #244a3d; text-decoration: none; font-size: 13px;
+  line-height: 1.5; overflow-wrap: anywhere;
+}
+.entries a[aria-current], .entries a:hover { background: #f6faf4; border-color: var(--rule); }
+.entries strong { font-size: 13px; font-weight: 650; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+main { width: 100%; max-width: 1110px; margin-inline: auto; padding: clamp(24px, 4.8vw, 66px); }
+.document {
+  background: #fdfefa; border: 1px solid var(--rule); border-radius: 11px; overflow: hidden;
+  box-shadow: 0 4px 24px #27402b09;
+}
+.document + .document { margin-top: 24px; }
+.document-heading { padding: clamp(22px, 4vw, 46px); border-bottom: 1px solid var(--rule); background: #fcfdf9; }
+.category { font-size: 13px; color: var(--forest); font-weight: 680; }
+.document-heading h2 {
+  margin: 11px 0 19px; color: #18332a; font-size: clamp(26px, 3.1vw, 39px);
+  font-weight: 720; letter-spacing: -.045em; line-height: 1.28; overflow-wrap: anywhere;
+}
+.attachments { display: flex; gap: 8px; flex-wrap: wrap; }
+.attachments a {
+  padding: 7px 11px; border: 1px solid #d4dfd5; border-radius: 6px;
+  font-size: 13px; text-decoration: none; background: #f3f7f0;
+}
+.attachments a:hover { background: #e4eee1; }
+.document-body { padding: clamp(22px, 4vw, 46px); font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; }
+.document-body h1, .document-body h2, .document-body h3, .document-body h4 {
+  color: #263a30; line-height: 1.45; margin: 1.4em 0 .6em;
+}
+.document-body h2 { font-size: 22px; }
+.document-body h3 { font-size: 18px; }
+.document-body p { margin-bottom: 12px; }
+.document-body ul, .document-body ol { padding-inline-start: 1.5em; }
+.document-body li p { margin-bottom: 3px; }
+.document-body blockquote {
+  margin: 0 0 24px; padding: 12px 16px; border-left: 3px solid #658674;
+  border-radius: 0 6px 6px 0; background: #edf3ea; color: #334d40; font-size: 14px;
+}
+.document-body blockquote p:last-child { margin: 0; }
+.table-scroll { overflow: auto; margin-block: 15px; }
+.document-body table { border-collapse: collapse; width: 100%; min-width: 420px; }
+.document-body :is(td, th) { text-align: left; padding: 8px 12px; border: 1px solid var(--rule); }
+.document-body th { background: #edf3ea; }
+.document-body img { max-width: 100%; height: auto; }
+.document-body pre { max-width: 100%; overflow-x: auto; background: #f0f4ed; padding: 12px; }
+#empty { color: var(--muted); background: #fdfefa; padding: 25px; border: 1px solid var(--rule); border-radius: 8px; }
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: 1fr; }
+  .sidebar { position: static; min-height: 0; max-height: none; padding: 17px; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .identity { margin-bottom: 15px; }
+  .finder { margin-bottom: 11px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 4px; }
+  .filters button { width: auto; padding: 5px 8px; gap: 6px; }
+  .entries { margin-top: 12px; padding-top: 11px; }
+  main { padding: 14px 12px 24px; }
+}
+
+</style>
+</head>
+<body>
+<div class="workspace">
+  <aside class="sidebar" aria-label="文档目录">
+    <div class="identity">
+      <span class="monogram" aria-hidden="true">傅</span>
+      <h1>傅佳礼的文档库</h1>
+    </div>
+    <div class="finder">
+      <label for="search">搜索文档</label>
+      <input id="search" type="search" placeholder="输入文档名" autocomplete="off">
+    </div>
+    <nav class="filters" aria-label="按类型筛选">
+      <button type="button" data-filter="all" aria-pressed="true"><span>全部文档</span><small>1</small></button>
+<button type="button" data-filter="reports" aria-pressed="false"><span>工作汇报</span><small>0</small></button>
+<button type="button" data-filter="reviews" aria-pressed="false"><span>复盘分析</span><small>1</small></button>
+<button type="button" data-filter="plans" aria-pressed="false"><span>方案与建议</span><small>0</small></button>
+<button type="button" data-filter="guides" aria-pressed="false"><span>流程与规范</span><small>0</small></button>
+<button type="button" data-filter="tables" aria-pressed="false"><span>数据表格</span><small>0</small></button>
+<button type="button" data-filter="other" aria-pressed="false"><span>其他文档</span><small>0</small></button>
+    </nav>
+    <nav class="entries" aria-label="文档">
+      <h2 id="list-title">全部文档</h2>
+      <p id="results" role="status" aria-live="polite" class="visually-hidden"></p>
+      <ul id="documents"><li data-category="reviews"><a href="#doc-8c5e3669eca7b8"><strong>H5转APK选品复盘与引入建议</strong><small>复盘分析 · MD / PDF</small></a></li></ul>
+    </nav>
+  </aside>
+  <main id="reader" aria-label="阅览区">
+    <p id="empty" hidden>当前筛选条件下没有文档。</p>
+    <article class="document" id="doc-8c5e3669eca7b8" data-category="reviews"><header class="document-heading"><div class="category">复盘分析</div><h2 tabindex="-1">H5转APK选品复盘与引入建议</h2><div class="attachments"><a href="documents/H5%E8%BD%ACAPK%E9%80%89%E5%93%81%E5%A4%8D%E7%9B%98%E4%B8%8E%E5%BC%95%E5%85%A5%E5%BB%BA%E8%AE%AE.md">MD 原件</a><a href="documents/H5%E8%BD%ACAPK%E9%80%89%E5%93%81%E5%A4%8D%E7%9B%98%E4%B8%8E%E5%BC%95%E5%85%A5%E5%BB%BA%E8%AE%AE.pdf">PDF 归档件</a></div></header><div class="document-body"><blockquote>
+<p>网页阅读版收录飞书正文。飞书内嵌的表格请在原文中查看。
+<a href="https://transsioner.feishu.cn/wiki/Ah1zwnLThiClcnkXytNcUPrbnOh" target="_blank" rel="noopener noreferrer">打开飞书原文</a></p>
+</blockquote>
+<h2>一、历史选品复盘：从AHA热门转向深度内容向APK+商业化可调优空间</h2>
+<h3>两批选品的主要变化</h3>
+<h2>二、在投各品类H5转APK游戏数据与品类覆盖情况</h2>
+<h3>2.1 收入前10H5转APK游戏分类及数据</h3>
+<ul>
+<li><p><strong>头部游戏特征</strong>：</p>
+<ul>
+<li><p>以关卡类为主（页面切换频繁，变现点位较灵活）。节奏较快，但内容持续变化，有较深可玩性</p>
+</li>
+<li><p>核心玩法直观，学习成本低。但阶段目标清晰，操作反馈及时</p>
+</li>
+<li><p>同分类游戏在联运TOP游戏榜单有一定数量（射击除外）</p>
+</li>
+</ul>
+</li>
+<li><p>头部游戏数据（10.18-10.24）</p>
+</li>
+</ul>
+<h3>2.2 细分品类情况及引入建议</h3>
+<ul>
+<li><p><strong>联运TOP35榜单特征</strong>：</p>
+<ul>
+<li><p>休闲益智占据榜单前列，细分玩法较多较分散，同玩法有多款产品入榜。消除类目下麻将、泡泡龙、拼词拼图、一笔画、球排序等子玩法较为多元化。</p>
+</li>
+<li><p>车辆题材游戏覆盖较为明显，共7款在榜。5款竞速类、1款驾驶模拟器、1款车辆清洗。</p>
+</li>
+<li><p>音游和女性向游戏形成补充，各有2-3款游戏在榜。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>选品方向</strong>：重点引入竞速类、消除类、解谜类游戏，各子玩法选品方向见下表。</p>
+</li>
+</ul>
+<hr>
+</div></article>
+  </main>
+</div>
+<script>
+"use strict";
+
+const search = document.querySelector("#search");
+const listTitle = document.querySelector("#list-title");
+const results = document.querySelector("#results");
+const empty = document.querySelector("#empty");
+const filters = [...document.querySelectorAll("[data-filter]")];
+const rows = [...document.querySelectorAll("#documents li")].map(item => {
+  const link = item.querySelector("a");
+  const article = document.getElementById(link.hash.slice(1));
+  return { item, link, article, text: link.textContent.toLocaleLowerCase("zh-CN") };
+});
+let category = "all";
+let selection = location.hash.slice(1);
+
+function render() {
+  const query = search.value.trim().toLocaleLowerCase("zh-CN");
+  const visible = rows.filter(({ item, text }) =>
+    (category === "all" || item.dataset.category === category) && text.includes(query)
+  );
+  const current = visible.find(row => row.article.id === selection) || visible[0];
+  selection = current?.article.id || "";
+  for (const row of rows) {
+    row.item.hidden = !visible.includes(row);
+    row.article.hidden = row !== current;
+    if (row === current) row.link.setAttribute("aria-current", "page");
+    else row.link.removeAttribute("aria-current");
+  }
+  for (const button of filters) button.setAttribute("aria-pressed", String(button.dataset.filter === category));
+  listTitle.textContent = filters.find(button => button.dataset.filter === category).firstElementChild.textContent;
+  results.textContent = "找到 " + visible.length + " 份文档";
+  empty.hidden = Boolean(current);
+}
+
+search.addEventListener("input", render);
+for (const button of filters) {
+  button.addEventListener("click", () => {
+    category = button.dataset.filter;
+    render();
+  });
+}
+for (const row of rows) {
+  row.link.addEventListener("click", () => {
+    selection = row.article.id;
+    render();
+  });
+}
+addEventListener("hashchange", () => {
+  const requested = rows.find(row => "#" + row.article.id === location.hash);
+  if (requested?.item.hidden) {
+    category = "all";
+    search.value = "";
+  }
+  selection = requested?.article.id || "";
+  render();
+});
+render();
+
+</script>
+</body>
+</html>

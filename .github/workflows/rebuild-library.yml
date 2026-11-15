@@ -1,0 +1,40 @@
+name: 更新静态文档库
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'documents/**'
+      - 'scripts/build-library.mjs'
+      - 'web/**'
+      - 'vendor/**'
+      - '.github/workflows/rebuild-library.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: document-library-main
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - name: 生成分类目录和网页
+        run: node scripts/build-library.mjs
+      - name: 提交更新
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html catalog.md; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- index.html catalog.md
+          git commit -m '更新静态文档库'
+          git push origin HEAD:refs/heads/main

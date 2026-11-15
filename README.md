@@ -16,7 +16,9 @@
 
 把文件放到 `documents/`。同一文档的 Markdown 和 PDF 等版本使用同一文件名主体，网页会把它们合并为一条。网页用 Markdown 或纯文本展示正文，其他格式作为原件保留。
 
-运行以下命令按文件名重新分类并生成 `index.html` 和 `catalog.md`，然后一起提交。生成器需要 Node.js 22 或更新版本，直接打开网页只需要浏览器。
+将新文档提交到 `main` 后，GitHub Actions 会重新分类并提交网页和在线目录。
+
+要在本机预览更新，运行以下命令按文件名重新分类并生成 `index.html` 和 `catalog.md`，然后一起提交。生成器需要 Node.js 22 或更新版本，直接打开网页只需要浏览器。
 
 ```bash
 node scripts/build-library.mjs

@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, writeFile } from "node:fs/promises";
-import { posix as path } from "node:path";
+import { copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { posix as path, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { Marked } from "../vendor/marked.mjs";
+
+const [option, pagesDirectory, ...extra] = process.argv.slice(2);
+if (option !== undefined && (option !== "--pages-dir" || !pagesDirectory || extra.length)) {
+  throw new Error("用法：node scripts/build-library.mjs [--pages-dir 临时空目录]");
+}
 
 const root = new URL("../", import.meta.url);
 const title = "傅佳礼的文档库";
@@ -14,6 +20,7 @@ const categories = [
   ["other", "其他文档", null],
 ];
 const supported = new Set(["md", "txt", "pdf", "doc", "docx", "xls", "xlsx", "csv", "ppt", "pptx"]);
+const publishable = new Set([...supported, "png", "jpg", "jpeg", "gif", "webp"]);
 const fileOrder = ["md", "txt", "pdf", "docx", "doc", "xlsx", "xls", "csv", "pptx", "ppt"];
 
 function escapeHtml(value) {
@@ -101,9 +108,9 @@ function classify(document) {
   return document.files.some(({ extension }) => ["xlsx", "xls", "csv"].includes(extension)) ? "tables" : "other";
 }
 
-async function loadDocuments() {
+async function loadDocuments(filenames) {
   const docs = new Map();
-  for (const filename of await listFiles("documents")) {
+  for (const filename of filenames) {
     const extension = path.extname(filename).slice(1).toLowerCase();
     if (!supported.has(extension)) continue;
     const basename = filename.slice(0, -(extension.length + 1));
@@ -132,7 +139,8 @@ async function loadDocuments() {
   }));
 }
 
-const documents = await loadDocuments();
+const filenames = await listFiles("documents");
+const documents = await loadDocuments(filenames);
 const label = id => categories.find(([key]) => key === id)?.[1];
 const linkFor = ({ filename, extension }) => '<a href="' + filenameUrl(filename) + '">'
   + (extension === "pdf" ? "PDF 归档件" : extension.toUpperCase() + " 原件") + '</a>';
@@ -175,4 +183,20 @@ await Promise.all([
   writeFile(fileUrl("index.html"), html, "utf8"),
   writeFile(fileUrl("catalog.md"), catalog, "utf8"),
 ]);
+if (pagesDirectory) {
+  const destination = pathToFileURL(resolve(pagesDirectory) + sep);
+  await mkdir(destination, { recursive: true });
+  if ((await readdir(destination)).length) {
+    throw new Error("Pages 发布目录必须为空。");
+  }
+
+  const assets = filenames.filter(filename => publishable.has(path.extname(filename).slice(1).toLowerCase()));
+  await Promise.all(assets.map(async filename => {
+    const output = new URL(filenameUrl(filename), destination);
+    await mkdir(new URL(".", output), { recursive: true });
+    await copyFile(fileUrl(filename), output);
+  }));
+  await writeFile(new URL("index.html", destination), html, "utf8");
+  console.log(`已整理 ${assets.length} 个 Pages 附件。`);
+}
 console.log(`已按类型整理 ${documents.length} 份文档。`);

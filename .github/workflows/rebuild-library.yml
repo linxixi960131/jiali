@@ -1,4 +1,4 @@
-name: 更新静态文档库
+name: 更新并发布文档库
 
 on:
   push:
@@ -12,25 +12,61 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: document-library-main
   cancel-in-progress: false
 
 jobs:
-  rebuild:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          ref: main
-      - name: 生成分类目录和网页
-        run: node scripts/build-library.mjs
-      - name: 提交更新
+          node-version: '22'
+      - name: 生成网页和附件
+        run: node scripts/build-library.mjs --pages-dir "$RUNNER_TEMP/document-library"
+      - name: 打包 Pages 网站
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: ${{ runner.temp }}/document-library
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  sync-catalog:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+      - name: 更新仓库中的网页和目录
         shell: bash
         run: |
+          node scripts/build-library.mjs
           if git diff --quiet -- index.html catalog.md; then
+            exit 0
+          fi
+          git fetch --no-tags --depth=1 origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]; then
+            echo 'main 已收到更新，由较新的工作流同步目录。'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
